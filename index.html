@@ -37,7 +37,8 @@ h1{margin:0;font-size:32px;letter-spacing:2px}
 #fls{position:absolute;inset:0;background:#fff;opacity:0}
 #dm{position:absolute;inset:0;box-shadow:inset 0 0 120px 40px #f00;opacity:0;transition:opacity .6s}
 #scp{position:absolute;inset:0;background:linear-gradient(#000,#000) center/100% 1px no-repeat,linear-gradient(#000,#000) center/1px 100% no-repeat,radial-gradient(circle at center,transparent 0,transparent 44vmin,#000 44.4vmin)}
-#mic{position:absolute;top:8px;right:12px;font-size:24px}
+#mic{position:fixed;top:8px;right:12px;z-index:60;width:40px;height:40px;border-radius:50%;background:#c0392b;box-shadow:0 0 10px #f55;display:flex;align-items:center;justify-content:center;font-size:22px}
+#mt{position:fixed;top:56px;right:12px;z-index:60;padding:10px 14px;background:#2a3547;border:2px solid #4a5a78}#mt.on{background:#c0392b;border-color:#f66}
 #ci{position:fixed;bottom:60px;left:12px;width:70%;font-size:17px;z-index:30;text-align:left}
 #tc .b{position:fixed;z-index:10;width:56px;height:56px;border-radius:50%;background:#fff3;border:2px solid #fff6;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700}
 select{font:inherit;padding:10px;border-radius:8px;background:#fff;color:#000;max-width:68vw}
@@ -72,8 +73,9 @@ input[type=range]{padding:0;width:160px}
 <div id="hud" class="hide"><div id="top"></div><div id="cx">+</div><div id="msg"></div><div id="pr"></div><div id="pb"><i id="pbi"></i></div>
 <div id="st"></div><div id="am"></div><div id="cl"></div>
 <div id="vt" class="hide"><span id="vtt"></span><button id="vy">Evet</button><button id="vn">Hayır</button></div>
-<div id="fls"></div><div id="dm"></div><div id="scp" class="hide"></div><div id="mic" class="hide">🎤</div></div>
+<div id="fls"></div><div id="dm"></div><div id="scp" class="hide"></div></div><div id="mic" class="hide">🎤</div>
 <input id="ci" class="hide" maxlength="120" enterkeyhint="send" placeholder="Mesaj yaz, Enter">
+<button id="mt" class="hide">🎤 Basılı tut</button>
 <div id="tc"></div>
 <script type="module">
 import*as T from 'three';
@@ -221,7 +223,7 @@ for(let i=0;i<w.p;i++){const d=fw.clone().add(new V3(rnd(-1,1),rnd(-1,1),rnd(-1,
 if(e){const id=e.object.userData.id;dm[id]=(dm[id]||0)+w.d*(e.object.userData.hd?2.5:1)}if(!i)end=o.clone().addScaledVector(d,e?e.distance:Ld)}
 for(const id in dm)send({t:'hit',to:id,d:dm[id],from:me.id});
 const m={t:'sh',a:o.toArray(),b:end.toArray(),k:c.k};shot(m);send(m);if(c.a<=0)reload()}
-function shot(m){const a=new V3().fromArray(m.a),b=new V3().fromArray(m.b);smDmg(a,b,.9,.7);const l=new T.Line(new T.BufferGeometry().setFromPoints([a,b]),new T.LineBasicMaterial({color:0xffdd88,transparent:true}));fx(l,.07,(f,p)=>f.o.material.opacity=1-p);
+function shot(m){const a=new V3().fromArray(m.a),b=new V3().fromArray(m.b);smDmg(a,b,1,2.5);const l=new T.Line(new T.BufferGeometry().setFromPoints([a,b]),new T.LineBasicMaterial({color:0xffdd88,transparent:true}));fx(l,.07,(f,p)=>f.o.material.opacity=1-p);
 const v=Math.max(0,1-cam.position.distanceTo(a)/90);noise(m.k==='awp'?.35:.15,v*.7);if(m.k==='awp')tone(70,.3,v,'sawtooth')}
 /* ---- bombalar ---- */
 const ND=[],FX=[],SM=[];function fx(o,life,fn){sc.add(o);FX.push({o,life,max:life,fn})}
@@ -240,16 +242,16 @@ if(n.t<=0){boom(n);sc.remove(n.m);ND.splice(i,1)}}}
 function mkSmoke(p){let c=p.clone();c.y+=1.4;if(!los(p,c))c=p.clone().add(new V3(0,.5,0));const R=4.6,cs=.9,cells=[],pos=[],al=[],ph=[];
 for(let x=-R;x<=R;x+=cs)for(let y=-R;y<=R;y+=cs)for(let z=-R;z<=R;z+=cs){if(x*x+y*y+z*z>R*R)continue;const q=new V3(c.x+x+rnd(-.2,.2),c.y+y+rnd(-.2,.2),c.z+z+rnd(-.2,.2));if(!los(c,q))continue;cells.push({p:q,hp:0});pos.push(q.x,q.y,q.z);al.push(0);ph.push(Math.random())}
 const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setAttribute('a',new T.Float32BufferAttribute(al,1));geo.setAttribute('ph',new T.Float32BufferAttribute(ph,1));
-const mat=new T.ShaderMaterial({uniforms:{t:{value:0},sc:{value:1},sz:{value:3.4},col:{value:new T.Color(.74,.75,.77)}},transparent:true,depthWrite:false,
+const mat=new T.ShaderMaterial({uniforms:{t:{value:0},sc:{value:1},sz:{value:2.6},col:{value:new T.Color(.74,.75,.77)}},transparent:true,depthWrite:false,
 vertexShader:'attribute float a;attribute float ph;varying float va;varying float vp;uniform float sz,sc,t;void main(){va=a;vp=ph;vec3 o=vec3(sin(t*.6+ph*6.28),cos(t*.5+ph*5.),sin(t*.4+ph*3.))*.2;vec4 mv=modelViewMatrix*vec4(position+o,1.);gl_PointSize=min(sz*sc/-mv.z,900.);gl_Position=projectionMatrix*mv;}',
-fragmentShader:'varying float va;varying float vp;uniform vec3 col;void main(){vec2 c=gl_PointCoord-.5;float d=length(c)*2.;float al=smoothstep(1.,.15,d)*va*.4;if(al<.005)discard;gl_FragColor=vec4(col*(.85+.15*vp),al);}'});
+fragmentShader:'varying float va;varying float vp;uniform vec3 col;void main(){vec2 c=gl_PointCoord-.5;float d=length(c)*2.;float al=smoothstep(1.,.15,d)*va*.5;if(al<.005)discard;gl_FragColor=vec4(col*(.85+.15*vp),al);}'});
 const pts=new T.Points(geo,mat);pts.frustumCulled=false;sc.add(pts);SM.push({cells,geo,mat,pts,t:18})}
-function smStep(dt){for(let i=SM.length-1;i>=0;i--){const s=SM[i];s.t-=dt;let any=0;const ar=s.geo.attributes.a.array;
-for(let j=0;j<s.cells.length;j++){const c=s.cells[j];if(s.t>0)c.hp=Math.min(1,c.hp+.5*dt);else c.hp=Math.max(0,c.hp-.3*dt);if(c.hp>0)any=1;ar[j]=c.hp}
+function smStep(dt){for(let i=SM.length-1;i>=0;i--){const s=SM[i];s.t-=dt;s.age=(s.age||0)+dt;let any=0;const ar=s.geo.attributes.a.array;
+for(let j=0;j<s.cells.length;j++){const c=s.cells[j];if(s.t>0)c.hp=Math.min(1,c.hp+(c.cut?.2:.6)*dt);else c.hp=Math.max(0,c.hp-.3*dt);if(c.hp>0)any=1;ar[j]=c.hp}
 s.geo.attributes.a.needsUpdate=true;s.mat.uniforms.t.value=performance.now()/1000;s.mat.uniforms.sc.value=ren.domElement.height/(2*Math.tan(cam.fov*Math.PI/360));
 if(s.t<=0&&!any){sc.remove(s.pts);s.geo.dispose();SM.splice(i,1)}}}
-function smDmg(a,b,r,d){const ab=b.clone().sub(a),L2=Math.max(ab.lengthSq(),1e-6),q=new V3;for(const s of SM)for(const c of s.cells){const t=Math.max(0,Math.min(1,c.p.clone().sub(a).dot(ab)/L2));q.copy(a).addScaledVector(ab,t);if(q.distanceToSquared(c.p)<r*r)c.hp=Math.max(0,c.hp-d)}}
-function smBlast(p,R){for(const s of SM)for(const c of s.cells){const d=c.p.distanceTo(p);if(d<R)c.hp=Math.max(0,c.hp-1.2*(1-d/R))}}
+function smDmg(a,b,r,d){const ab=b.clone().sub(a),L2=Math.max(ab.lengthSq(),1e-6),q=new V3;for(const s of SM)for(const c of s.cells){const t=Math.max(0,Math.min(1,c.p.clone().sub(a).dot(ab)/L2));q.copy(a).addScaledVector(ab,t);if(q.distanceToSquared(c.p)<r*r){c.cut=1;c.hp=Math.max(0,c.hp-d)}}}
+function smBlast(p,R){for(const s of SM)for(const c of s.cells){const d=c.p.distanceTo(p);if(d<R){c.cut=1;c.hp=Math.max(0,c.hp-2.5*(1-d/R))}}}
 /* ---- girdi ---- */
 const ci_=$('ci');
 addEventListener('keydown',e=>{if(rebind){e.preventDefault();e.stopPropagation();if(e.key!=='Escape'){const q=e.key.toLowerCase(),old=BIND[rebind];for(const a in BIND)if(BIND[a]===q)BIND[a]=old;BIND[rebind]=q;mk();sv()}rebind=null;renSet();return}if(!$('se').classList.contains('hide'))return;if(document.activeElement===ci_){if(e.key==='Enter'){const v=ci_.value.trim();if(v){const m={t:'ch',n:me.n,m:v};log(me.n+': '+v);send(m)}ci_.value='';ci_.classList.add('hide');ci_.blur()}if(e.key==='Escape'){ci_.classList.add('hide');ci_.blur()}e.stopPropagation();return}
@@ -262,7 +264,7 @@ addEventListener('mouseup',e=>{if(e.button===0)fl.fire=0;if(e.button===2)fl.alt=
 addEventListener('wheel',e=>{if(playing())sel((ci+(e.deltaY>0?1:inv.length-1))%inv.length)});
 const sel=i=>{if(inv[i]&&mp()?.alive){ci=i;rl=0;zoom=false}},zt=()=>{if(W[cur()?.k]?.z)zoom=!zoom},chatT=()=>{if(ci_.classList.contains('hide')){ci_.classList.remove('hide');ci_.focus();document.exitPointerLock?.()}};
 let micOn=false;function ptt(v){micOn=!!v;if(vs)vs.getAudioTracks().forEach(t=>t.enabled=micOn);$('mic').classList.toggle('hide',!micOn)}
-function pv(v){if(ST.vm==='tog'){if(v)ptt(!micOn)}else ptt(v)}
+function pv(v){if(!vs){ensureMic().then(()=>pv(v));return}if(ST.vm==='tog'){if(v)ptt(!micOn)}else ptt(v)}
 const tc={};
 addEventListener('touchstart',e=>{if(!playing())return;for(const t of e.changedTouches){if(t.target.closest('.b,#vt'))continue;if(mp()&&!mp().alive)sp++;tc[t.identifier]={t:t.clientX<innerWidth/2?'j':'l',x:t.clientX,y:t.clientY,ox:t.clientX,oy:t.clientY}}},{passive:false});
 addEventListener('touchmove',e=>{for(const t of e.changedTouches){const c=tc[t.identifier];if(!c)continue;if(c.t==='j'){mv.x=Math.max(-1,Math.min(1,(t.clientX-c.ox)/45));mv.y=Math.max(-1,Math.min(1,(t.clientY-c.oy)/45))}else{yaw-=(t.clientX-c.x)*.006*ST.sens*(zoom?.4:1);pit=Math.max(-1.5,Math.min(1.5,pit-(t.clientY-c.y)*.006*ST.sens*(zoom?.4:1)))}c.x=t.clientX;c.y=t.clientY}e.preventDefault()},{passive:false});
@@ -293,7 +295,8 @@ $('lo').onclick=openLd;document.querySelectorAll('.vs').forEach(b=>b.onclick=()=
 document.body.append($('vt'));$('vy').onclick=()=>send({t:'vv',y:1});$('vn').onclick=()=>send({t:'vv',y:0});$('go').onclick=()=>{if(host){au();newRound()}};
 let vs,calls={};const CALLS=[],VA=[];
 const getMic=()=>navigator.mediaDevices.getUserMedia({audio:{deviceId:ST.mic?{ideal:ST.mic}:undefined,echoCancellation:true,noiseSuppression:true}});
-async function boot(){au();me.n=($('nm').value.trim()||'Oyuncu')+'';try{if(!vs)vs=await getMic()}catch(e){vs=AC.createMediaStreamDestination().stream}vs.getAudioTracks().forEach(t=>t.enabled=false)}
+async function boot(){au();me.n=($('nm').value.trim()||'Oyuncu')+'';try{if(!vs)vs=await getMic()}catch(e){vs=AC.createMediaStreamDestination().stream}vs.getAudioTracks().forEach(t=>t.enabled=micOn)}
+let micP;function ensureMic(){return micP=micP||(async()=>{au();if(!vs){try{vs=await getMic()}catch(e){vs=AC.createMediaStreamDestination().stream}}vs.getAudioTracks().forEach(t=>t.enabled=micOn)})()}
 async function setMic(id){ST.mic=id;sv();let ns;try{ns=await getMic()}catch(e){return}const nt=ns.getAudioTracks()[0];nt.enabled=micOn;CALLS.forEach(c=>c.peerConnection?.getSenders().forEach(x=>{if(x.track?.kind==='audio')x.replaceTrack(nt)}));if(vs)vs.getTracks().forEach(t=>t.stop());vs=ns}
 const KN={f:'İleri',b:'Geri',l:'Sol',r:'Sağ',j:'Zıpla',c:'Eğil',rl:'Şarjör',u:'Kullan / Kur / İmha',v:'Mikrofon (konuş / aç-kapa)',ch:'Sohbet',m:'Ekipman Menüsü'},kn=q=>q===' '?'BOŞLUK':q.toUpperCase();
 function renSet(){$('sk').innerHTML=Object.keys(KN).map(a=>`<div class="pl" style="justify-content:space-between"><span>${KN[a]}</span><button class="card" style="width:120px" data-a="${a}">${rebind===a?'Bir tuşa bas...':kn(BIND[a])}</button></div>`).join('')}
@@ -365,5 +368,9 @@ vk*=.85;vmg.position.z=-.5+vk*.08;
 if(m?.alive&&cur()){const w=W[cur().k];vm.scale.set(1,1,w?(w.melee?.4:1):.3);vmg.visible=!(zoom&&w?.z<=20)}
 const ck=m?.alive&&cur()?cur().k:'';if(ck!==vmk){vmk=ck;if(vmc)vmg.remove(vmc);vmc=ck?getWM(ck,1):null;if(vmc)vmg.add(vmc)}vm.visible=!vmc;
 ren.render(sc,cam)}
+const mt=$('mt'),md=v=>{au();pv(v)};
+mt.addEventListener('touchstart',e=>{e.preventDefault();md(1)});['touchend','touchcancel'].forEach(n=>mt.addEventListener(n,e=>{e.preventDefault();md(0)}));
+mt.addEventListener('mousedown',()=>md(1));mt.addEventListener('mouseup',()=>md(0));mt.addEventListener('mouseleave',()=>{if(ST.vm==='ptt')md(0)});
+setInterval(()=>{mt.classList.toggle('hide',!['mn','lb','ld','mp','se'].some(i=>!$(i).classList.contains('hide')));mt.classList.toggle('on',micOn);mt.textContent=micOn?'🎤 Mikrofon açık':ST.vm==='tog'?'🎤 Aç / Kapa':'🎤 Basılı tut'},250);
 loop();
 </script></body></html>
